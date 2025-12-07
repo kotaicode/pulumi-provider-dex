@@ -299,13 +299,68 @@ export DEX_API_CONNECTORS_CRUD=true
 
 Contributions are welcome! Please open an issue or submit a pull request.
 
+## Dex Version Compatibility
+
+This provider has been tested with:
+- **Dex v2.4.0+** (with `DEX_API_CONNECTORS_CRUD=true`)
+
+The provider requires:
+- Dex gRPC API enabled
+- `DEX_API_CONNECTORS_CRUD=true` environment variable set on Dex (required for connector CRUD operations)
+
+For older Dex versions, connector management may not be available. Client management should work with any Dex version that exposes the gRPC API.
+
+## Development
+
+### Prerequisites
+- Go 1.24.1+
+- Pulumi CLI
+- Docker and Docker Compose (for local testing)
+
+### Building
+
+```bash
+make build
+```
+
+### Running Tests
+
+```bash
+# Unit tests
+make test
+
+# Integration tests (requires Dex running)
+make dex-up
+make test  # Run tests with integration tag
+make dex-down
+```
+
+### Code Quality
+
+```bash
+# Run linter
+golangci-lint run
+
+# Format code
+go fmt ./...
+```
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
 ## License
 
-[Add your license here]
+[License TBD - Add MIT or Apache 2.0]
 
 ## Support
 
-For issues and questions:
-- GitHub Issues: [Add your repo URL]
-- Documentation: [Add docs URL]
+- **GitHub Issues**: https://github.com/kotaicode/pulumi-provider-dex/issues
+- **Documentation**: https://github.com/kotaicode/pulumi-provider-dex#readme
 
