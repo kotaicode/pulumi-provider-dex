@@ -173,6 +173,17 @@ jobs:
           cd sdk/typescript/nodejs
           npm run build
 
+      - name: Check if NPM_TOKEN is set
+        id: check-npm-token
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "has_token=false" >> $GITHUB_OUTPUT
+            echo "⚠ NPM_TOKEN not set, skipping publish"
+          else
+            echo "has_token=true" >> $GITHUB_OUTPUT
+            echo "✓ NPM_TOKEN is set, will publish"
+          fi
+
       - name: Publish to NPM
         run: |
           cd sdk/typescript/nodejs
@@ -180,5 +191,5 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         # Only publish if NPM_TOKEN secret is set (optional for first release)
-        if: secrets.NPM_TOKEN != ''
+        if: steps.check-npm-token.outputs.has_token == 'true'
 
