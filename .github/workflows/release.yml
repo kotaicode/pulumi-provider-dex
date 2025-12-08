@@ -180,5 +180,5 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         # Only publish if NPM_TOKEN secret is set (optional for first release)
-        if: ${{ secrets.NPM_TOKEN != '' }}
+        if: secrets.NPM_TOKEN != ''
 
