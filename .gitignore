@@ -24,7 +24,7 @@ go.work
 *.stack
 
 # SDKs (generated)
-sdk/
+#sdk/
 
 # IDE
 .idea/

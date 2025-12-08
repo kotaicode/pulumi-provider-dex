@@ -1,5 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as dex from "@yournamespace/dex";
+import * as dex from "@kotaicode/pulumi-dex";
 
 // Configure the Dex provider for local development
 // Note: The SDK currently requires all fields, but for local testing with insecure Dex,

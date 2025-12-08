@@ -1,0 +1,6 @@
+{
+  "resource": true,
+  "name": "dex",
+  "version": "0.1.0",
+  "server": "github://api.github.com/kotaicode/pulumi-provider-dex"
+}

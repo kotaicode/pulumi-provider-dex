@@ -13,13 +13,31 @@ install: build
 	@pulumi plugin install resource dex v0.1.0 --file bin/pulumi-resource-dex || true
 	@echo "✓ Provider installed"
 
+# Generate schema.json (requires Pulumi CLI)
+# First install the provider, then get its schema
+generate-schema: build
+	@echo "Generating schema.json..."
+	@pulumi plugin install resource dex v0.1.0 --file bin/pulumi-resource-dex 2>/dev/null || true
+	@pulumi package get-schema dex > schema.json || (echo "⚠ Schema generation failed (Pulumi CLI required)" && exit 1)
+	@echo "✓ Schema generated: schema.json"
+
 # Generate language SDKs (requires Pulumi CLI)
+# Use schema.json if available, otherwise install provider and use plugin name
 generate-sdks: build
 	@echo "Generating SDKs..."
 	@mkdir -p sdk
-	@pulumi package gen-sdk bin/pulumi-resource-dex --language typescript --out sdk/typescript || echo "⚠ TypeScript SDK generation failed (Pulumi CLI required)"
-	@pulumi package gen-sdk bin/pulumi-resource-dex --language go --out sdk/go || echo "⚠ Go SDK generation failed (Pulumi CLI required)"
-	@pulumi package gen-sdk bin/pulumi-resource-dex --language python --out sdk/python || echo "⚠ Python SDK generation failed (Pulumi CLI required)"
+	@if [ -f schema.json ]; then \
+		echo "Using schema.json for SDK generation..."; \
+		pulumi package gen-sdk schema.json --language typescript --out sdk/typescript || echo "⚠ TypeScript SDK generation failed"; \
+		pulumi package gen-sdk schema.json --language go --out sdk/go || echo "⚠ Go SDK generation failed"; \
+		pulumi package gen-sdk schema.json --language python --out sdk/python || echo "⚠ Python SDK generation failed"; \
+	else \
+		echo "schema.json not found, installing provider and using plugin name..."; \
+		pulumi plugin install resource dex v0.1.0 --file bin/pulumi-resource-dex 2>/dev/null || true; \
+		pulumi package gen-sdk dex --language typescript --out sdk/typescript || echo "⚠ TypeScript SDK generation failed"; \
+		pulumi package gen-sdk dex --language go --out sdk/go || echo "⚠ Go SDK generation failed"; \
+		pulumi package gen-sdk dex --language python --out sdk/python || echo "⚠ Python SDK generation failed"; \
+	fi
 	@echo "✓ SDKs generated in sdk/"
 
 # Run tests
@@ -50,12 +68,13 @@ dex-down:
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  build          - Build the provider binary"
-	@echo "  install        - Build and install the provider locally"
-	@echo "  generate-sdks  - Generate language SDKs (requires Pulumi CLI)"
-	@echo "  test           - Run tests"
-	@echo "  clean          - Clean build artifacts"
-	@echo "  dex-up         - Start local Dex with docker-compose"
-	@echo "  dex-down       - Stop local Dex"
-	@echo "  help           - Show this help message"
+	@echo "  build           - Build the provider binary"
+	@echo "  install         - Build and install the provider locally"
+	@echo "  generate-schema - Generate schema.json (requires Pulumi CLI)"
+	@echo "  generate-sdks   - Generate language SDKs (requires Pulumi CLI)"
+	@echo "  test            - Run tests"
+	@echo "  clean           - Clean build artifacts"
+	@echo "  dex-up          - Start local Dex with docker-compose"
+	@echo "  dex-down        - Stop local Dex"
+	@echo "  help            - Show this help message"
 

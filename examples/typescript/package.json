@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@pulumi/pulumi": "^3.0.0",
-    "@yournamespace/dex": "file:../../sdk/typescript/nodejs"
+    "@kotaicode/pulumi-dex": "file:../../sdk/typescript/nodejs"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

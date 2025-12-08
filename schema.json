@@ -1,0 +1,577 @@
+{
+  "name": "dex",
+  "displayName": "Dex Provider",
+  "version": "0.1.0",
+  "namespace": "kotaicode",
+  "publisher": "Kotaicode GmbH",
+  "keywords": [
+    "category/cloud",
+    "kind/native"
+  ],
+  "pluginDownloadURL": "github://api.github.com/kotaicode/pulumi-provider-dex",
+  "meta": {
+    "moduleFormat": "(.*)"
+  },
+  "language": {
+    "csharp": {
+      "respectSchemaVersion": true
+    },
+    "go": {
+      "generateResourceContainerTypes": true,
+      "importBasePath": "github.com/kotaicode/pulumi-provider-dex/sdk/go/dex",
+      "respectSchemaVersion": true
+    },
+    "nodejs": {
+      "packageName": "@kotaicode/pulumi-dex",
+      "respectSchemaVersion": true
+    },
+    "python": {
+      "packageName": "pulumi_kotaicode_dex",
+      "pyproject": {
+        "enabled": true
+      },
+      "respectSchemaVersion": true
+    }
+  },
+  "config": {
+    "variables": {
+      "caCert": {
+        "type": "string",
+        "description": "PEM-encoded CA certificate for validating Dex's TLS certificate.",
+        "secret": true
+      },
+      "clientCert": {
+        "type": "string",
+        "description": "PEM-encoded client certificate for mTLS to Dex.",
+        "secret": true
+      },
+      "clientKey": {
+        "type": "string",
+        "description": "PEM-encoded private key for the client certificate.",
+        "secret": true
+      },
+      "host": {
+        "type": "string",
+        "description": "Dex gRPC host:port, e.g. dex.internal.kotaicode:5557."
+      },
+      "insecureSkipVerify": {
+        "type": "boolean",
+        "description": "If true, disables TLS verification (development only)."
+      },
+      "timeoutSeconds": {
+        "type": "integer",
+        "description": "Per-RPC timeout in seconds when talking to Dex."
+      }
+    },
+    "defaults": [
+      "host"
+    ]
+  },
+  "types": {
+    "dex:index:OIDCClaimMapping": {
+      "properties": {
+        "emailKey": {
+          "type": "string"
+        },
+        "groupsKey": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "dex:index:OIDCConfig": {
+      "properties": {
+        "claimMapping": {
+          "$ref": "#/types/dex:index:OIDCClaimMapping"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string",
+          "secret": true
+        },
+        "extra": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          }
+        },
+        "insecureIssuer": {
+          "type": "boolean"
+        },
+        "insecureSkipEmailVerified": {
+          "type": "boolean"
+        },
+        "issuer": {
+          "type": "string"
+        },
+        "redirectUri": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "userNameKey": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "issuer",
+        "redirectUri"
+      ]
+    }
+  },
+  "provider": {
+    "properties": {
+      "caCert": {
+        "type": "string",
+        "description": "PEM-encoded CA certificate for validating Dex's TLS certificate.",
+        "secret": true
+      },
+      "clientCert": {
+        "type": "string",
+        "description": "PEM-encoded client certificate for mTLS to Dex.",
+        "secret": true
+      },
+      "clientKey": {
+        "type": "string",
+        "description": "PEM-encoded private key for the client certificate.",
+        "secret": true
+      },
+      "host": {
+        "type": "string",
+        "description": "Dex gRPC host:port, e.g. dex.internal.kotaicode:5557."
+      }
+    },
+    "type": "object",
+    "required": [
+      "host"
+    ],
+    "inputProperties": {
+      "caCert": {
+        "type": "string",
+        "description": "PEM-encoded CA certificate for validating Dex's TLS certificate.",
+        "secret": true
+      },
+      "clientCert": {
+        "type": "string",
+        "description": "PEM-encoded client certificate for mTLS to Dex.",
+        "secret": true
+      },
+      "clientKey": {
+        "type": "string",
+        "description": "PEM-encoded private key for the client certificate.",
+        "secret": true
+      },
+      "host": {
+        "type": "string",
+        "description": "Dex gRPC host:port, e.g. dex.internal.kotaicode:5557."
+      },
+      "insecureSkipVerify": {
+        "type": "boolean",
+        "description": "If true, disables TLS verification (development only)."
+      },
+      "timeoutSeconds": {
+        "type": "integer",
+        "description": "Per-RPC timeout in seconds when talking to Dex."
+      }
+    },
+    "requiredInputs": [
+      "host"
+    ]
+  },
+  "resources": {
+    "dex:index:AzureMicrosoftConnector": {
+      "description": "Manages an Azure AD/Entra ID connector in Dex using the Microsoft-specific connector (type: microsoft).",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string"
+        },
+        "groups": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "redirectUri": {
+          "type": "string"
+        },
+        "tenant": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "tenant"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string"
+        },
+        "groups": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "redirectUri": {
+          "type": "string"
+        },
+        "tenant": {
+          "type": "string"
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "tenant"
+      ]
+    },
+    "dex:index:AzureOidcConnector": {
+      "description": "Manages an Azure AD/Entra ID connector in Dex using the generic OIDC connector (type: oidc).",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string"
+        },
+        "extraOidc": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "redirectUri": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tenantId": {
+          "type": "string"
+        },
+        "userNameSource": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "tenantId"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string"
+        },
+        "extraOidc": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "redirectUri": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tenantId": {
+          "type": "string"
+        },
+        "userNameSource": {
+          "type": "string"
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "tenantId"
+      ]
+    },
+    "dex:index:Client": {
+      "description": "Manages an OAuth2 client in Dex.",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "logoUrl": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "public": {
+          "type": "boolean"
+        },
+        "redirectUris": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "secret": {
+          "type": "string",
+          "secret": true
+        },
+        "trustedPeers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "name",
+        "redirectUris"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string"
+        },
+        "logoUrl": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "public": {
+          "type": "boolean"
+        },
+        "redirectUris": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "secret": {
+          "type": "string",
+          "secret": true
+        },
+        "trustedPeers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "name",
+        "redirectUris"
+      ]
+    },
+    "dex:index:CognitoOidcConnector": {
+      "description": "Manages an AWS Cognito user pool connector in Dex using the generic OIDC connector (type: oidc).",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string"
+        },
+        "extraOidc": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "redirectUri": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "userNameSource": {
+          "type": "string"
+        },
+        "userPoolId": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "region",
+        "userPoolId"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string"
+        },
+        "extraOidc": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "redirectUri": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "userNameSource": {
+          "type": "string"
+        },
+        "userPoolId": {
+          "type": "string"
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "region",
+        "userPoolId"
+      ]
+    },
+    "dex:index:Connector": {
+      "description": "Manages a connector (upstream identity provider) in Dex.",
+      "properties": {
+        "connectorId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "oidcConfig": {
+          "$ref": "#/types/dex:index:OIDCConfig"
+        },
+        "rawConfig": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "connectorId",
+        "name",
+        "type"
+      ],
+      "inputProperties": {
+        "connectorId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "oidcConfig": {
+          "$ref": "#/types/dex:index:OIDCConfig"
+        },
+        "rawConfig": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "requiredInputs": [
+        "connectorId",
+        "name",
+        "type"
+      ]
+    }
+  }
+}
