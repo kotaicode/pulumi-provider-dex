@@ -1,0 +1,6 @@
+name: dex-example
+runtime:
+  name: nodejs
+  options:
+    typescript: true
+

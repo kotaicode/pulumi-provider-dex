@@ -1,0 +1,43 @@
+# Dex configuration for local development
+# This enables the gRPC API for connector and client management
+
+issuer: http://localhost:5556/dex
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+grpc:
+  addr: 0.0.0.0:5557
+  # For development, we'll use insecure mode
+  # In production, configure TLS:
+  # tlsCert: /etc/dex/grpc/grpc.crt
+  # tlsKey: /etc/dex/grpc/grpc.key
+  # tlsClientCA: /etc/dex/grpc/client.crt
+  reflection: true
+
+# Enable the builtin/local connector (satisfies Dex's requirement for at least one connector)
+enablePasswordDB: true
+
+# Static client for testing (optional)
+staticClients:
+  - id: test-client
+    name: Test Client
+    secret: test-secret
+    redirectURIs:
+      - http://localhost:5555/callback
+
+# Static users for the builtin connector (optional - users can be managed via gRPC API)
+staticPasswords:
+  - email: "admin@example.com"
+    # bcrypt hash of "password" - generate with: echo -n password | htpasswd -BinC 10 admin | cut -d: -f2
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: "admin"
+    userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
+
+# Allow password grants with local users
+oauth2:
+  passwordConnector: local
+

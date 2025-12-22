@@ -1,0 +1,60 @@
+# Binaries
+bin/
+pulumi-resource-dex
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Pulumi
+.pulumi/
+*.stack
+
+# SDKs (generated)
+#sdk/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Certificates (if not committed)
+examples/certs/*.crt
+examples/certs/*.key
+!examples/certs/.gitkeep
+
+# Script binaries
+examples/scripts/dex-debug
+examples/scripts/verify-resources
+examples/scripts/cleanup-leftovers
+examples/scripts/test-delete
+examples/scripts/test-delete-direct
+examples/scripts/test-delete-my-web-app
+examples/scripts/test-verification
+

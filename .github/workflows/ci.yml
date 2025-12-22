@@ -1,0 +1,183 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24.1'
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          args: --timeout=5m
+
+      - name: Run tests
+        run: go test ./... -v -race -coverprofile=coverage.out
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.out
+          flags: unittests
+          name: codecov-umbrella
+
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24.1'
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build provider
+        run: make build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: pulumi-resource-dex-${{ matrix.os }}
+          path: bin/pulumi-resource-dex*
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24.1'
+
+      - name: Set up Docker Compose
+        run: |
+          docker-compose version
+
+      - name: Start Dex
+        run: make dex-up
+        env:
+          DEX_API_CONNECTORS_CRUD: "true"
+
+      - name: Wait for Dex to be ready
+        run: |
+          timeout=30
+          elapsed=0
+          while ! timeout 1 bash -c "echo > /dev/tcp/localhost/5557" 2>/dev/null; do
+            if [ $elapsed -ge $timeout ]; then
+              echo "Dex failed to start within $timeout seconds"
+              docker-compose logs
+              exit 1
+            fi
+            sleep 1
+            elapsed=$((elapsed + 1))
+          done
+          echo "Dex is ready"
+
+      - name: Run integration tests
+        run: |
+          go test ./... -tags=integration -v
+        env:
+          DEX_HOST: "localhost:5557"
+          DEX_INSECURE_SKIP_VERIFY: "true"
+
+      - name: Stop Dex
+        if: always()
+        run: make dex-down
+
+  sdk-generation:
+    name: SDK Generation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24.1'
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v6
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build provider
+        run: make build
+
+      - name: Generate SDKs
+        run: make generate-sdks
+
+      - name: Check SDK changes
+        run: |
+          if [ -n "$(git status --porcelain sdk/)" ]; then
+            echo "SDK files have changed. Please run 'make generate-sdks' and commit the changes."
+            git status
+            git diff sdk/
+            exit 1
+          fi
+
+      - name: Test TypeScript SDK
+        run: |
+          cd sdk/typescript/nodejs
+          npm install
+          npm run build
+

@@ -1,0 +1,1070 @@
+{
+  "name": "dex",
+  "displayName": "Dex Provider",
+  "version": "0.1.0",
+  "description": "A Pulumi provider for managing Dex resources via the Dex gRPC Admin API",
+  "keywords": [
+    "category/cloud"
+  ],
+  "repository": "github.com/kotaicode/pulumi-provider-dex",
+  "pluginDownloadURL": "github://api.github.com/kotaicode/pulumi-provider-dex",
+  "publisher": "Kotaicode GmbH",
+  "namespace": "dex",
+  "meta": {
+    "moduleFormat": "(.*)"
+  },
+  "language": {
+    "go": {
+      "generateResourceContainerTypes": true,
+      "importBasePath": "github.com/kotaicode/pulumi-provider-dex/sdk/go/dex",
+      "respectSchemaVersion": true
+    },
+    "nodejs": {
+      "packageName": "@kotaicode/pulumi-dex",
+      "respectSchemaVersion": true
+    },
+    "python": {
+      "packageName": "pulumi_kotaicode_dex",
+      "respectSchemaVersion": true
+    }
+  },
+  "config": {
+    "variables": {
+      "caCert": {
+        "type": "string",
+        "description": "PEM-encoded CA certificate for validating Dex's TLS certificate.",
+        "secret": true
+      },
+      "clientCert": {
+        "type": "string",
+        "description": "PEM-encoded client certificate for mTLS to Dex.",
+        "secret": true
+      },
+      "clientKey": {
+        "type": "string",
+        "description": "PEM-encoded private key for the client certificate.",
+        "secret": true
+      },
+      "host": {
+        "type": "string",
+        "description": "Dex gRPC host:port, e.g. dex.internal.kotaicode:5557."
+      },
+      "insecureSkipVerify": {
+        "type": "boolean",
+        "description": "If true, disables TLS verification (development only)."
+      },
+      "timeoutSeconds": {
+        "type": "integer",
+        "description": "Per-RPC timeout in seconds when talking to Dex."
+      }
+    },
+    "defaults": [
+      "host"
+    ]
+  },
+  "types": {
+    "dex:resources:GitHubOrg": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "GitHub organization name."
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of team names within the organization. If empty, all members of the organization can authenticate."
+        }
+      },
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "dex:resources:OIDCClaimMapping": {
+      "properties": {
+        "emailKey": {
+          "type": "string",
+          "description": "The OIDC claim key that contains the user's email address."
+        },
+        "groupsKey": {
+          "type": "string",
+          "description": "The OIDC claim key that contains the user's group memberships."
+        }
+      },
+      "type": "object"
+    },
+    "dex:resources:OIDCConfig": {
+      "properties": {
+        "claimMapping": {
+          "$ref": "#/types/dex:resources:OIDCClaimMapping",
+          "description": "Mapping of OIDC claims to Dex user attributes."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "The OIDC client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "The OIDC client secret.",
+          "secret": true
+        },
+        "extra": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          },
+          "description": "Additional OIDC configuration fields as key-value pairs."
+        },
+        "insecureIssuer": {
+          "type": "boolean",
+          "description": "If true, skip verification of the issuer URL. Not recommended for production."
+        },
+        "insecureSkipEmailVerified": {
+          "type": "boolean",
+          "description": "If true, skip verification of the 'email_verified' claim. Not recommended for production."
+        },
+        "issuer": {
+          "type": "string",
+          "description": "The OIDC issuer URL (e.g., 'https://accounts.google.com')."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "The redirect URI registered with the OIDC provider. Must match Dex's callback URL."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of OIDC scopes to request (e.g., 'openid', 'profile', 'email'). Defaults to ['openid', 'profile', 'email'] if not specified."
+        },
+        "userNameKey": {
+          "type": "string",
+          "description": "The claim key to use as the username (e.g., 'preferred_username', 'email', 'sub')."
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "issuer",
+        "redirectUri"
+      ]
+    }
+  },
+  "provider": {
+    "properties": {
+      "caCert": {
+        "type": "string",
+        "description": "PEM-encoded CA certificate for validating Dex's TLS certificate.",
+        "secret": true
+      },
+      "clientCert": {
+        "type": "string",
+        "description": "PEM-encoded client certificate for mTLS to Dex.",
+        "secret": true
+      },
+      "clientKey": {
+        "type": "string",
+        "description": "PEM-encoded private key for the client certificate.",
+        "secret": true
+      },
+      "host": {
+        "type": "string",
+        "description": "Dex gRPC host:port, e.g. dex.internal.kotaicode:5557."
+      }
+    },
+    "type": "object",
+    "required": [
+      "host"
+    ],
+    "inputProperties": {
+      "caCert": {
+        "type": "string",
+        "description": "PEM-encoded CA certificate for validating Dex's TLS certificate.",
+        "secret": true
+      },
+      "clientCert": {
+        "type": "string",
+        "description": "PEM-encoded client certificate for mTLS to Dex.",
+        "secret": true
+      },
+      "clientKey": {
+        "type": "string",
+        "description": "PEM-encoded private key for the client certificate.",
+        "secret": true
+      },
+      "host": {
+        "type": "string",
+        "description": "Dex gRPC host:port, e.g. dex.internal.kotaicode:5557."
+      },
+      "insecureSkipVerify": {
+        "type": "boolean",
+        "description": "If true, disables TLS verification (development only)."
+      },
+      "timeoutSeconds": {
+        "type": "integer",
+        "description": "Per-RPC timeout in seconds when talking to Dex."
+      }
+    },
+    "requiredInputs": [
+      "host"
+    ]
+  },
+  "resources": {
+    "dex:resources:AzureMicrosoftConnector": {
+      "description": "Manages an Azure AD/Entra ID connector in Dex using the Microsoft-specific connector (type: microsoft). This connector provides Microsoft-specific features like group filtering and domain restrictions.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "Azure AD application (client) ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Azure AD application client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the Azure Microsoft connector."
+        },
+        "groups": {
+          "type": "string",
+          "description": "Name of the claim that contains group memberships (e.g., 'groups'). Used for group-based access control."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in Azure AD. Must match Dex's callback URL."
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Azure AD tenant identifier. Can be 'common' (any Azure AD account), 'organizations' (any organizational account), or a specific tenant ID (UUID format)."
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "tenant"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string",
+          "description": "Azure AD application (client) ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Azure AD application client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the Azure Microsoft connector."
+        },
+        "groups": {
+          "type": "string",
+          "description": "Name of the claim that contains group memberships (e.g., 'groups'). Used for group-based access control."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in Azure AD. Must match Dex's callback URL."
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Azure AD tenant identifier. Can be 'common' (any Azure AD account), 'organizations' (any organizational account), or a specific tenant ID (UUID format)."
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "tenant"
+      ]
+    },
+    "dex:resources:AzureOidcConnector": {
+      "description": "Manages an Azure AD/Entra ID connector in Dex using the generic OIDC connector (type: oidc). This connector allows users to authenticate using their Azure AD/Entra ID credentials.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "Azure AD application (client) ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Azure AD application client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the Azure connector."
+        },
+        "extraOidc": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          },
+          "description": "Additional OIDC configuration fields as key-value pairs for advanced scenarios."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in Azure AD. Must match Dex's callback URL (typically 'https://dex.example.com/callback')."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "OIDC scopes to request from Azure AD. Defaults to ['openid', 'profile', 'email', 'offline_access'] if not specified."
+        },
+        "tenantId": {
+          "type": "string",
+          "description": "Azure AD tenant ID (UUID format). This identifies your Azure AD organization."
+        },
+        "userNameSource": {
+          "type": "string",
+          "description": "Source for the username claim. Valid values: 'preferred_username' (default), 'upn' (User Principal Name), or 'email'."
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "tenantId"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string",
+          "description": "Azure AD application (client) ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Azure AD application client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the Azure connector."
+        },
+        "extraOidc": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          },
+          "description": "Additional OIDC configuration fields as key-value pairs for advanced scenarios."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in Azure AD. Must match Dex's callback URL (typically 'https://dex.example.com/callback')."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "OIDC scopes to request from Azure AD. Defaults to ['openid', 'profile', 'email', 'offline_access'] if not specified."
+        },
+        "tenantId": {
+          "type": "string",
+          "description": "Azure AD tenant ID (UUID format). This identifies your Azure AD organization."
+        },
+        "userNameSource": {
+          "type": "string",
+          "description": "Source for the username claim. Valid values: 'preferred_username' (default), 'upn' (User Principal Name), or 'email'."
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "tenantId"
+      ]
+    },
+    "dex:resources:Client": {
+      "description": "Manages an OAuth2 client in Dex. OAuth2 clients are applications that can authenticate users through Dex.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "Unique identifier for the OAuth2 client. This is used as the client_id in OAuth2 flows."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the client was created (RFC3339 format)."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL to a logo image for the OAuth2 client. Used in consent screens."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the OAuth2 client."
+        },
+        "public": {
+          "type": "boolean",
+          "description": "If true, this client is a public client (e.g., mobile app) and does not require a client secret."
+        },
+        "redirectUris": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of allowed redirect URIs for OAuth2 authorization flows. Must be valid HTTP/HTTPS URLs."
+        },
+        "secret": {
+          "type": "string",
+          "description": "Client secret for the OAuth2 client. If not provided, a secure random secret will be generated automatically.",
+          "secret": true
+        },
+        "trustedPeers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of trusted peer client IDs that can exchange tokens with this client."
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "name",
+        "redirectUris"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string",
+          "description": "Unique identifier for the OAuth2 client. This is used as the client_id in OAuth2 flows."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL to a logo image for the OAuth2 client. Used in consent screens."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the OAuth2 client."
+        },
+        "public": {
+          "type": "boolean",
+          "description": "If true, this client is a public client (e.g., mobile app) and does not require a client secret."
+        },
+        "redirectUris": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of allowed redirect URIs for OAuth2 authorization flows. Must be valid HTTP/HTTPS URLs."
+        },
+        "secret": {
+          "type": "string",
+          "description": "Client secret for the OAuth2 client. If not provided, a secure random secret will be generated automatically.",
+          "secret": true
+        },
+        "trustedPeers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of trusted peer client IDs that can exchange tokens with this client."
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "name",
+        "redirectUris"
+      ]
+    },
+    "dex:resources:CognitoOidcConnector": {
+      "description": "Manages an AWS Cognito user pool connector in Dex using the generic OIDC connector (type: oidc). This connector allows users to authenticate using their AWS Cognito credentials.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "Cognito app client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Cognito app client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the Cognito connector."
+        },
+        "extraOidc": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          },
+          "description": "Additional OIDC configuration fields as key-value pairs for advanced scenarios."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in Cognito. Must match Dex's callback URL."
+        },
+        "region": {
+          "type": "string",
+          "description": "AWS region where the Cognito user pool is located (e.g., 'us-east-1', 'eu-west-1')."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "OIDC scopes to request from Cognito. Defaults to ['openid', 'email', 'profile'] if not specified."
+        },
+        "userNameSource": {
+          "type": "string",
+          "description": "Source for the username claim. Valid values: 'email' or 'sub' (subject)."
+        },
+        "userPoolId": {
+          "type": "string",
+          "description": "AWS Cognito user pool ID."
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "region",
+        "userPoolId"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string",
+          "description": "Cognito app client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Cognito app client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the Cognito connector."
+        },
+        "extraOidc": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "pulumi.json#/Any"
+          },
+          "description": "Additional OIDC configuration fields as key-value pairs for advanced scenarios."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in Cognito. Must match Dex's callback URL."
+        },
+        "region": {
+          "type": "string",
+          "description": "AWS region where the Cognito user pool is located (e.g., 'us-east-1', 'eu-west-1')."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "OIDC scopes to request from Cognito. Defaults to ['openid', 'email', 'profile'] if not specified."
+        },
+        "userNameSource": {
+          "type": "string",
+          "description": "Source for the username claim. Valid values: 'email' or 'sub' (subject)."
+        },
+        "userPoolId": {
+          "type": "string",
+          "description": "AWS Cognito user pool ID."
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri",
+        "region",
+        "userPoolId"
+      ]
+    },
+    "dex:resources:Connector": {
+      "description": "Manages a generic connector (upstream identity provider) in Dex. Use this resource for connectors not covered by specific connector types, or when you need full control over the connector configuration.",
+      "properties": {
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the connector."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "oidcConfig": {
+          "$ref": "#/types/dex:resources:OIDCConfig",
+          "description": "OIDC-specific configuration. Use this for OIDC-based connectors."
+        },
+        "rawConfig": {
+          "type": "string",
+          "description": "Raw JSON configuration for the connector. Use this for advanced configurations or connector types not directly supported. If provided, this takes precedence over OIDCConfig."
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of connector (e.g., 'oidc', 'saml', 'ldap'). Must match a connector type supported by Dex."
+        }
+      },
+      "type": "object",
+      "required": [
+        "connectorId",
+        "name",
+        "type"
+      ],
+      "inputProperties": {
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the connector."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "oidcConfig": {
+          "$ref": "#/types/dex:resources:OIDCConfig",
+          "description": "OIDC-specific configuration. Use this for OIDC-based connectors."
+        },
+        "rawConfig": {
+          "type": "string",
+          "description": "Raw JSON configuration for the connector. Use this for advanced configurations or connector types not directly supported. If provided, this takes precedence over OIDCConfig."
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of connector (e.g., 'oidc', 'saml', 'ldap'). Must match a connector type supported by Dex."
+        }
+      },
+      "requiredInputs": [
+        "connectorId",
+        "name",
+        "type"
+      ]
+    },
+    "dex:resources:GitHubConnector": {
+      "description": "Manages a GitHub connector in Dex. This connector allows users to authenticate using their GitHub accounts and supports organization and team-based access control.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "GitHub OAuth app client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "GitHub OAuth app client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the GitHub connector."
+        },
+        "hostName": {
+          "type": "string",
+          "description": "GitHub Enterprise hostname (e.g., 'github.example.com'). Leave empty for github.com."
+        },
+        "loadAllGroups": {
+          "type": "boolean",
+          "description": "If true, load all groups (teams) the user is a member of. Defaults to false."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "orgs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/types/dex:resources:GitHubOrg"
+          },
+          "description": "List of GitHub organizations with optional team restrictions. Only users in these orgs/teams will be allowed to authenticate."
+        },
+        "preferredEmailDomain": {
+          "type": "string",
+          "description": "Preferred email domain. If set, users with emails in this domain will be preferred."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in GitHub OAuth app. Must match Dex's callback URL."
+        },
+        "rootCA": {
+          "type": "string",
+          "description": "Root CA certificate for GitHub Enterprise (PEM format). Required if using self-signed certificates."
+        },
+        "teamNameField": {
+          "type": "string",
+          "description": "Field to use for team names in group claims. Valid values: 'name', 'slug', or 'both'. Defaults to 'slug'."
+        },
+        "useLoginAsID": {
+          "type": "boolean",
+          "description": "If true, use GitHub login username as the user ID. Defaults to false."
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string",
+          "description": "GitHub OAuth app client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "GitHub OAuth app client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the GitHub connector."
+        },
+        "hostName": {
+          "type": "string",
+          "description": "GitHub Enterprise hostname (e.g., 'github.example.com'). Leave empty for github.com."
+        },
+        "loadAllGroups": {
+          "type": "boolean",
+          "description": "If true, load all groups (teams) the user is a member of. Defaults to false."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "orgs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/types/dex:resources:GitHubOrg"
+          },
+          "description": "List of GitHub organizations with optional team restrictions. Only users in these orgs/teams will be allowed to authenticate."
+        },
+        "preferredEmailDomain": {
+          "type": "string",
+          "description": "Preferred email domain. If set, users with emails in this domain will be preferred."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in GitHub OAuth app. Must match Dex's callback URL."
+        },
+        "rootCA": {
+          "type": "string",
+          "description": "Root CA certificate for GitHub Enterprise (PEM format). Required if using self-signed certificates."
+        },
+        "teamNameField": {
+          "type": "string",
+          "description": "Field to use for team names in group claims. Valid values: 'name', 'slug', or 'both'. Defaults to 'slug'."
+        },
+        "useLoginAsID": {
+          "type": "boolean",
+          "description": "If true, use GitHub login username as the user ID. Defaults to false."
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri"
+      ]
+    },
+    "dex:resources:GitLabConnector": {
+      "description": "Manages a GitLab connector in Dex. This connector allows users to authenticate using their GitLab accounts and supports group-based access control.",
+      "properties": {
+        "baseURL": {
+          "type": "string",
+          "description": "GitLab instance base URL. Defaults to 'https://gitlab.com' for GitLab.com."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "GitLab OAuth application client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "GitLab OAuth application client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the GitLab connector."
+        },
+        "getGroupsPermission": {
+          "type": "boolean",
+          "description": "If true, request 'read_api' scope to fetch group memberships. Defaults to false."
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of GitLab group names. Only users in these groups will be allowed to authenticate."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in GitLab OAuth app. Must match Dex's callback URL."
+        },
+        "useLoginAsID": {
+          "type": "boolean",
+          "description": "If true, use GitLab username as the user ID. Defaults to false."
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri"
+      ],
+      "inputProperties": {
+        "baseURL": {
+          "type": "string",
+          "description": "GitLab instance base URL. Defaults to 'https://gitlab.com' for GitLab.com."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "GitLab OAuth application client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "GitLab OAuth application client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the GitLab connector."
+        },
+        "getGroupsPermission": {
+          "type": "boolean",
+          "description": "If true, request 'read_api' scope to fetch group memberships. Defaults to false."
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of GitLab group names. Only users in these groups will be allowed to authenticate."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in GitLab OAuth app. Must match Dex's callback URL."
+        },
+        "useLoginAsID": {
+          "type": "boolean",
+          "description": "If true, use GitLab username as the user ID. Defaults to false."
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri"
+      ]
+    },
+    "dex:resources:GoogleConnector": {
+      "description": "Manages a Google connector in Dex. This connector allows users to authenticate using their Google accounts and supports domain and group-based access control.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "Google OAuth client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Google OAuth client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the Google connector."
+        },
+        "domainToAdminEmail": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Map of domain names to admin email addresses. Used for group lookups in Google Workspace."
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of Google Groups. Only users in these groups will be allowed to authenticate."
+        },
+        "hostedDomains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of Google Workspace domains. Only users with email addresses in these domains will be allowed to authenticate."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "promptType": {
+          "type": "string",
+          "description": "OAuth prompt type. Valid values: 'consent' (default) or 'select_account'."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in Google OAuth app. Must match Dex's callback URL."
+        },
+        "serviceAccountFilePath": {
+          "type": "string",
+          "description": "Path to Google service account JSON file. Required for group-based access control."
+        }
+      },
+      "type": "object",
+      "required": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri"
+      ],
+      "inputProperties": {
+        "clientId": {
+          "type": "string",
+          "description": "Google OAuth client ID."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Google OAuth client secret.",
+          "secret": true
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the Google connector."
+        },
+        "domainToAdminEmail": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Map of domain names to admin email addresses. Used for group lookups in Google Workspace."
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of Google Groups. Only users in these groups will be allowed to authenticate."
+        },
+        "hostedDomains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of Google Workspace domains. Only users with email addresses in these domains will be allowed to authenticate."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        },
+        "promptType": {
+          "type": "string",
+          "description": "OAuth prompt type. Valid values: 'consent' (default) or 'select_account'."
+        },
+        "redirectUri": {
+          "type": "string",
+          "description": "Redirect URI registered in Google OAuth app. Must match Dex's callback URL."
+        },
+        "serviceAccountFilePath": {
+          "type": "string",
+          "description": "Path to Google service account JSON file. Required for group-based access control."
+        }
+      },
+      "requiredInputs": [
+        "clientId",
+        "clientSecret",
+        "connectorId",
+        "name",
+        "redirectUri"
+      ]
+    },
+    "dex:resources:LocalConnector": {
+      "description": "Manages a local/builtin connector in Dex. The local connector provides username/password authentication stored in Dex's database. This is useful for testing or when you don't have an external identity provider.",
+      "properties": {
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the local connector."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the local connector is enabled. Defaults to true."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        }
+      },
+      "type": "object",
+      "required": [
+        "connectorId",
+        "name"
+      ],
+      "inputProperties": {
+        "connectorId": {
+          "type": "string",
+          "description": "Unique identifier for the local connector."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the local connector is enabled. Defaults to true."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the connector, displayed to users during login."
+        }
+      },
+      "requiredInputs": [
+        "connectorId",
+        "name"
+      ]
+    }
+  }
+}

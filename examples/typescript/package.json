@@ -1,0 +1,17 @@
+{
+  "name": "dex-example",
+  "version": "1.0.0",
+  "description": "Example Pulumi program using the Dex provider",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@pulumi/pulumi": "^3.0.0",
+    "@kotaicode/pulumi-dex": "file:../../sdk/typescript/nodejs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

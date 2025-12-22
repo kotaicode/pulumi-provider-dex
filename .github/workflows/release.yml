@@ -1,0 +1,193 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24.1'
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v6
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build provider
+        run: make build
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Install provider for schema generation
+        run: |
+          pulumi plugin install resource dex ${{ steps.version.outputs.version }} --file bin/pulumi-resource-dex
+
+      - name: Generate schema.json
+        run: make generate-schema
+      - name: Generate SDKs
+        run: make generate-sdks
+
+      - name: Generate package-lock.json for TypeScript SDK
+        run: |
+          cd sdk/typescript/nodejs
+          npm install  # Generate package-lock.json for future npm ci
+          echo "✓ package-lock.json generated"
+
+      - name: Build provider binaries for all platforms
+        run: |
+          mkdir -p release
+          VERSION=${{ steps.version.outputs.version }}
+          GOOS=linux GOARCH=amd64 go build -ldflags "-X 'github.com/kotaicode/pulumi-provider-dex/pkg/provider.Version=$(VERSION)'" -o release/pulumi-resource-dex-linux-amd64 ./cmd/pulumi-resource-dex
+          GOOS=linux GOARCH=arm64 go build -ldflags "-X 'github.com/kotaicode/pulumi-provider-dex/pkg/provider.Version=$(VERSION)'" -o release/pulumi-resource-dex-linux-arm64 ./cmd/pulumi-resource-dex
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-X 'github.com/kotaicode/pulumi-provider-dex/pkg/provider.Version=$(VERSION)'" -o release/pulumi-resource-dex-darwin-amd64 ./cmd/pulumi-resource-dex
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-X 'github.com/kotaicode/pulumi-provider-dex/pkg/provider.Version=$(VERSION)'" -o release/pulumi-resource-dex-darwin-arm64 ./cmd/pulumi-resource-dex
+          GOOS=windows GOARCH=amd64 go build -ldflags "-X 'github.com/kotaicode/pulumi-provider-dex/pkg/provider.Version=$(VERSION)'" -o release/pulumi-resource-dex-windows-amd64.exe ./cmd/pulumi-resource-dex
+
+      - name: Package binaries as tar.gz
+        run: |
+          cd release
+          VERSION=${{ steps.version.outputs.version }}
+          # Package Linux binaries
+          tar -czf pulumi-resource-dex-v${VERSION}-linux-amd64.tar.gz pulumi-resource-dex-linux-amd64
+          tar -czf pulumi-resource-dex-v${VERSION}-linux-arm64.tar.gz pulumi-resource-dex-linux-arm64
+          # Package Darwin (macOS) binaries
+          tar -czf pulumi-resource-dex-v${VERSION}-darwin-amd64.tar.gz pulumi-resource-dex-darwin-amd64
+          tar -czf pulumi-resource-dex-v${VERSION}-darwin-arm64.tar.gz pulumi-resource-dex-darwin-arm64
+          # Package Windows binary (tar.gz format per Pulumi spec)
+          tar -czf pulumi-resource-dex-v${VERSION}-windows-amd64.tar.gz pulumi-resource-dex-windows-amd64.exe
+          echo "✓ Binaries packaged"
+
+      - name: Create checksums
+        run: |
+          cd release
+          sha256sum pulumi-resource-dex-v*.tar.gz > checksums.txt
+          echo "✓ Checksums created"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/pulumi-resource-dex-v*.tar.gz
+            release/checksums.txt
+            schema.json
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            ### Provider Binary
+
+            Download the appropriate binary for your platform from the assets below.
+
+            ### TypeScript SDK
+
+            ```bash
+            npm install @kotaicode/pulumi-dex@${{ steps.version.outputs.version }}
+            ```
+
+            ### Go SDK
+
+            ```go
+            import "github.com/kotaicode/pulumi-provider-dex/sdk/go/dex"
+            ```
+
+            See [README.md](https://github.com/kotaicode/pulumi-provider-dex#readme) for full installation and usage instructions.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-npm:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    needs: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update package.json version
+        run: |
+          cd sdk/typescript/nodejs
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Install dependencies
+        run: |
+          cd sdk/typescript/nodejs
+          # Use npm install if package-lock.json doesn't exist, otherwise npm ci
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build TypeScript SDK
+        run: |
+          cd sdk/typescript/nodejs
+          npm run build
+
+      - name: Check if NPM_TOKEN is set
+        id: check-npm-token
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "has_token=false" >> $GITHUB_OUTPUT
+            echo "⚠ NPM_TOKEN not set, skipping publish"
+          else
+            echo "has_token=true" >> $GITHUB_OUTPUT
+            echo "✓ NPM_TOKEN is set, will publish"
+          fi
+
+      - name: Publish to NPM
+        run: |
+          cd sdk/typescript/nodejs
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # Only publish if NPM_TOKEN secret is set (optional for first release)
+        if: steps.check-npm-token.outputs.has_token == 'true'
+

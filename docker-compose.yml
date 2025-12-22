@@ -1,0 +1,20 @@
+
+services:
+  dex:
+    image: ghcr.io/dexidp/dex:latest-alpine
+    container_name: dex
+    ports:
+      - "5556:5556"  # Dex web UI
+      - "5557:5557"  # Dex gRPC API (insecure for local dev)
+    volumes:
+      - ./examples/dex-config.yaml:/etc/dex/config.yaml:ro
+    environment:
+      - DEX_API_CONNECTORS_CRUD=true
+    command: dex serve /etc/dex/config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5556/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
