@@ -1,6 +1,7 @@
 #!/bin/bash
-# Post-process TypeScript SDK index.ts to add top-level exports for types
-# This allows: import * as dex from "@kotaicode/pulumi-dex"; const connector: dex.AzureOidcConnector = ...
+# Post-process TypeScript SDK index.ts for isolatedModules and top-level exports.
+# 1. Fix ProviderArgs to use "export type" (codegen emits "export { ProviderArgs }").
+# 2. Add top-level resource re-exports so: import * as dex from "@kotaicode/pulumi-dex"; dex.Client works.
 
 set -e
 
@@ -11,18 +12,21 @@ if [ ! -f "$INDEX_FILE" ]; then
     exit 1
 fi
 
-echo "Adding top-level type exports to TypeScript SDK..."
+echo "Fixing TypeScript SDK exports (ProviderArgs + top-level resources)..."
 
-# Check if exports already exist
-if grep -q "Re-export resources at top level" "$INDEX_FILE"; then
-    echo "Top-level exports already exist, skipping..."
-    exit 0
+# 1. Always fix ProviderArgs for isolatedModules (codegen overwrites this every time)
+if grep -q 'export { ProviderArgs }' "$INDEX_FILE"; then
+    sed -i.bak 's/export { ProviderArgs }/export type { ProviderArgs }/' "$INDEX_FILE"
+    rm -f "${INDEX_FILE}.bak"
+    echo "✓ Fixed ProviderArgs export for isolatedModules"
 fi
 
-# Add re-exports before the pulumi.runtime.registerResourcePackage call
-# We'll insert after the sub-module exports
-python3 << 'PYTHON_SCRIPT'
-import re
+# 2. Add top-level resource re-exports if not already present
+if grep -q "Re-export resources at top level" "$INDEX_FILE"; then
+    echo "Top-level resource exports already present, skipping insert."
+else
+    # Run Python script from stdin; pass INDEX_FILE as argv[1] ( - = read script from stdin)
+    python3 - "$INDEX_FILE" << 'PYTHON_SCRIPT'
 import sys
 
 index_file = sys.argv[1]
@@ -30,26 +34,22 @@ index_file = sys.argv[1]
 with open(index_file, 'r') as f:
     content = f.read()
 
-# Check if already modified
 if "Re-export resources at top level" in content:
-    print("Already modified, skipping...")
+    print("Already present, skipping.")
     sys.exit(0)
 
-# Find the position to insert (before pulumi.runtime.registerResourcePackage)
 insert_marker = "pulumi.runtime.registerResourcePackage"
 if insert_marker not in content:
-    print(f"Error: Could not find {insert_marker} in {index_file}")
+    print("Error: Could not find " + insert_marker + " in " + index_file, file=sys.stderr)
     sys.exit(1)
 
-# Create the re-export block
 re_exports = """
 // Re-export resources at top level for easier access.
 // This allows:
 //   import * as dex from "@kotaicode/pulumi-dex";
 //   const c: dex.AzureOidcConnector = new dex.AzureOidcConnector(...);
 //
-// Note: When isolatedModules is enabled, we must separate value exports from type exports.
-// Classes are exported as values, Args interfaces are exported as types.
+// When isolatedModules is enabled, value and type exports must be separate.
 export {
     AzureMicrosoftConnector,
     AzureOidcConnector,
@@ -62,7 +62,6 @@ export {
     LocalConnector,
 } from "./resources";
 
-// Export Args types separately (required for isolatedModules)
 export type {
     AzureMicrosoftConnectorArgs,
     AzureOidcConnectorArgs,
@@ -75,20 +74,18 @@ export type {
     LocalConnectorArgs,
 } from "./resources";
 
-// Re-export input/output types for easier access
 export * as inputs from "./types/input";
 export * as outputs from "./types/output";
 
 """
 
-# Insert before the registerResourcePackage call
 content = content.replace(insert_marker, re_exports + insert_marker)
 
 with open(index_file, 'w') as f:
     f.write(content)
 
-print("✓ Added top-level type exports to TypeScript SDK")
+print("✓ Added top-level resource/type exports to TypeScript SDK")
 PYTHON_SCRIPT
-    "$INDEX_FILE"
+fi
 
 echo "✓ TypeScript SDK exports fixed"

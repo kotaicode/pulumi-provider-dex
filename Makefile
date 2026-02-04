@@ -67,6 +67,11 @@ test:
 	@echo "Running tests..."
 	@go test ./... -v
 
+# Quick local test before publishing: generate SDK (with fix scripts), build TS SDK, run test-npm-package with isolatedModules
+test-npm-package: generate-schema generate-sdks
+	@chmod +x scripts/test-npm-package.sh
+	@./scripts/test-npm-package.sh
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning..."
@@ -95,6 +100,7 @@ help:
 	@echo "  generate-schema - Generate schema.json (requires Pulumi CLI)"
 	@echo "  generate-sdks   - Generate language SDKs (requires Pulumi CLI)"
 	@echo "  test            - Run tests"
+	@echo "  test-npm-package - Generate SDK, build TS, run test-npm-package (isolatedModules)"
 	@echo "  clean           - Clean build artifacts"
 	@echo "  dex-up          - Start local Dex with docker-compose"
 	@echo "  dex-down        - Stop local Dex"

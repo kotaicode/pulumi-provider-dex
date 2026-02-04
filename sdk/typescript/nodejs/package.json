@@ -5,8 +5,6 @@
         "category/cloud"
     ],
     "repository": "github.com/kotaicode/pulumi-provider-dex",
-    "main": "index.js",
-    "types": "index.d.ts",
     "scripts": {
         "build": "tsc"
     },

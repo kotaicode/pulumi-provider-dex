@@ -1,0 +1,11 @@
+export type { ProviderArgs } from "./provider";
+export type Provider = import("./provider").Provider;
+export declare const Provider: typeof import("./provider").Provider;
+import * as config from "./config";
+import * as resources from "./resources";
+import * as types from "./types";
+export { config, resources, types, };
+export { AzureMicrosoftConnector, AzureOidcConnector, Client, CognitoOidcConnector, Connector, GitHubConnector, GitLabConnector, GoogleConnector, LocalConnector, } from "./resources";
+export type { AzureMicrosoftConnectorArgs, AzureOidcConnectorArgs, ClientArgs, CognitoOidcConnectorArgs, ConnectorArgs, GitHubConnectorArgs, GitLabConnectorArgs, GoogleConnectorArgs, LocalConnectorArgs, } from "./resources";
+export * as inputs from "./types/input";
+export * as outputs from "./types/output";

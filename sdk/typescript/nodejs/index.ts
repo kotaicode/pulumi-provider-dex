@@ -27,8 +27,7 @@ export {
 //   import * as dex from "@kotaicode/pulumi-dex";
 //   const c: dex.AzureOidcConnector = new dex.AzureOidcConnector(...);
 //
-// Note: When isolatedModules is enabled, we must separate value exports from type exports.
-// Classes are exported as values, Args interfaces are exported as types.
+// When isolatedModules is enabled, value and type exports must be separate.
 export {
     AzureMicrosoftConnector,
     AzureOidcConnector,
@@ -41,7 +40,6 @@ export {
     LocalConnector,
 } from "./resources";
 
-// Export Args types separately (required for isolatedModules)
 export type {
     AzureMicrosoftConnectorArgs,
     AzureOidcConnectorArgs,
@@ -54,7 +52,6 @@ export type {
     LocalConnectorArgs,
 } from "./resources";
 
-// Re-export input/output types for easier access
 export * as inputs from "./types/input";
 export * as outputs from "./types/output";
 
