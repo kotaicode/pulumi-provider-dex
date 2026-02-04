@@ -35,6 +35,47 @@ const provider = new dex.Provider("dex", {
 });
 ```
 
+### Type Usage
+
+You can use the exported types for type annotations:
+
+```typescript
+import * as dex from "@kotaicode/pulumi-dex";
+
+// Type annotations work with top-level exports
+const connector: dex.AzureOidcConnector = new dex.AzureOidcConnector("azure", {
+    connectorId: "azure",
+    name: "Azure AD",
+    tenantId: "your-tenant-id",
+    clientId: "your-client-id",
+    clientSecret: "your-secret",
+    redirectUri: "https://dex.example.com/callback",
+}, { provider });
+
+// Input types are also available
+function createConnector(args: dex.AzureOidcConnectorArgs): dex.AzureOidcConnector {
+    return new dex.AzureOidcConnector("azure", args, { provider });
+}
+
+// You can also access types via the resources namespace
+const client: dex.resources.Client = new dex.Client("client", {
+    clientId: "my-client",
+    name: "My Client",
+    redirectUris: ["https://app.example.com/callback"],
+}, { provider });
+
+// Input/output types are available via the types namespace
+const inputArgs: dex.types.input.resources.AzureOidcConnectorArgs = {
+    connectorId: "azure",
+    name: "Azure AD",
+    tenantId: "your-tenant-id",
+    clientId: "your-client-id",
+    clientSecret: "your-secret",
+    redirectUri: "https://dex.example.com/callback",
+};
+```
+```
+
 ### 2. Create an OAuth2 Client
 
 ```typescript

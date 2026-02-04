@@ -39,6 +39,8 @@ generate-sdks: build
 		pulumi package gen-sdk dex --language go --out sdk/go || echo "⚠ Go SDK generation failed"; \
 		pulumi package gen-sdk dex --language python --out sdk/python || echo "⚠ Python SDK generation failed"; \
 	fi
+	@echo "Fixing TypeScript SDK exports..."
+	@./scripts/fix-typescript-exports.sh || echo "⚠ TypeScript exports fix failed (may already be fixed)"
 	@echo "✓ SDKs generated in sdk/"
 
 # Run tests

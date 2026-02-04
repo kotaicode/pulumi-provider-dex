@@ -21,6 +21,48 @@ export {
     resources,
     types,
 };
+
+// Re-export resources at top level for easier access
+// This exports both the classes (values) and their types
+export {
+    AzureMicrosoftConnector,
+    AzureMicrosoftConnectorArgs,
+    AzureOidcConnector,
+    AzureOidcConnectorArgs,
+    Client,
+    ClientArgs,
+    CognitoOidcConnector,
+    CognitoOidcConnectorArgs,
+    Connector,
+    ConnectorArgs,
+    GitHubConnector,
+    GitHubConnectorArgs,
+    GitLabConnector,
+    GitLabConnectorArgs,
+    GoogleConnector,
+    GoogleConnectorArgs,
+    LocalConnector,
+    LocalConnectorArgs,
+} from "./resources";
+
+// Re-export resource types explicitly for type annotations
+// TypeScript classes can be used as types, but we also export them explicitly here
+export type {
+    AzureMicrosoftConnector,
+    AzureOidcConnector,
+    Client,
+    CognitoOidcConnector,
+    Connector,
+    GitHubConnector,
+    GitLabConnector,
+    GoogleConnector,
+    LocalConnector,
+} from "./resources";
+
+// Re-export input/output types for easier access
+export * as inputs from "./types/input";
+export * as outputs from "./types/output";
+
 pulumi.runtime.registerResourcePackage("dex", {
     version: utilities.getVersion(),
     constructProvider: (name: string, type: string, urn: string): pulumi.ProviderResource => {
