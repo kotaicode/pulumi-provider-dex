@@ -1,7 +1,7 @@
 {
   "name": "dex",
   "displayName": "Dex Provider",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A Pulumi provider for managing Dex resources via the Dex gRPC Admin API",
   "keywords": [
     "category/cloud"
