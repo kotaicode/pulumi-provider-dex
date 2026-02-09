@@ -180,7 +180,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Download TypeScript SDK artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: typescript-sdk
           path: sdk/typescript/nodejs
